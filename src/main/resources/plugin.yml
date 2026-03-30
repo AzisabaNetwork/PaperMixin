@@ -1,0 +1,4 @@
+name: PaperMixin
+version: "@version@"
+main: net.azisaba.papermixin.PaperMixin
+api-version: 1.13

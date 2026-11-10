@@ -7,9 +7,11 @@ import org.spongepowered.asm.service.IClassBytecodeProvider;
 import org.spongepowered.asm.transformers.MixinClassReader;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class PaperClassBytecodeProvider implements IClassBytecodeProvider {
     private ClassNode getClassNode(String className, byte[] classBytes, int flags) {
+        Objects.requireNonNull(classBytes, "classBytes");
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new MixinClassReader(classBytes, className);
         classReader.accept(classNode, flags);
@@ -29,7 +31,7 @@ public class PaperClassBytecodeProvider implements IClassBytecodeProvider {
     @Override
     public ClassNode getClassNode(String name, boolean runTransformers, int readerFlags) throws ClassNotFoundException, IOException {
         byte[] classBytes = EnvProvider.get().getClassBytes(this.getClass().getClassLoader(), name);
-        if (classBytes == null) classBytes = EnvProvider.get().getClassBytes(EnvProvider.get().getBukkitClassLoader(), name);
+        if (classBytes == null) classBytes = EnvProvider.get().getClassBytes(EnvProvider.get().getMinecraftClassLoader(), name);
         return getClassNode(name, classBytes, readerFlags);
     }
 }

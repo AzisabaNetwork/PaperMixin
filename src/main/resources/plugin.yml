@@ -1,4 +1,4 @@
 name: PaperMixin
 version: "@version@"
-main: net.azisaba.papermixin.PaperMixin
+main: net.azisaba.papermixin.PaperMixinPlugin
 api-version: 1.13

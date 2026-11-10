@@ -60,7 +60,7 @@ public class PaperClassProvider implements IClassProvider {
 
     @Override
     public URL[] getClassPath() {
-        return tryGetURLsFromAppClassLoader(EnvProvider.get().getBukkitClassLoader());
+        return tryGetURLsFromAppClassLoader(EnvProvider.get().getMinecraftClassLoader());
     }
 
     @Override
@@ -75,6 +75,6 @@ public class PaperClassProvider implements IClassProvider {
 
     @Override
     public Class<?> findAgentClass(String name, boolean initialize) throws ClassNotFoundException {
-        return Class.forName(name, initialize, EnvProvider.get().getBukkitClassLoader());
+        return Class.forName(name, initialize, EnvProvider.get().getMinecraftClassLoader());
     }
 }

@@ -6,8 +6,6 @@ import org.spongepowered.asm.launch.platform.container.ContainerHandleURI;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleVirtual;
 import org.spongepowered.asm.launch.platform.container.IContainerHandle;
 import org.spongepowered.asm.logging.ILogger;
-import org.spongepowered.asm.logging.LoggerAdapterJava;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.service.*;
 import org.spongepowered.asm.util.Constants;
@@ -42,18 +40,13 @@ public class MixinServicePaper extends MixinServiceAbstract {
     }
 
     @Override
-    public MixinEnvironment.Phase getInitialPhase() {
-        return MixinEnvironment.Phase.DEFAULT;
-    }
-
-    @Override
     public CompatibilityLevel getMaxCompatibilityLevel() {
         return CompatibilityLevel.JAVA_21;
     }
     
     @Override
     protected ILogger createLogger(String name) {
-        return new LoggerAdapterJava(name);
+        return EnvProvider.get().getLogger();
     }
 
     @Override
@@ -68,7 +61,7 @@ public class MixinServicePaper extends MixinServiceAbstract {
             uri = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
             return new ContainerHandleURI(uri);
         } catch (URISyntaxException ex) {
-            ex.printStackTrace();
+            EnvProvider.get().getLogger().error("Failed to get primary container", ex);
         }
         return new ContainerHandleVirtual(this.getName());
     }

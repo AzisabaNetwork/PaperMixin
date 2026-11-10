@@ -1,6 +1,8 @@
 package net.azisaba.papermixin.helper;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.logging.ILogger;
 
 import java.util.Set;
 
@@ -10,8 +12,11 @@ public interface IPaperMixinEnvironment {
     @NotNull
     Set<String> getCachedClasses();
 
-    @NotNull
-    ClassLoader getBukkitClassLoader();
+    @Nullable
+    ClassLoader getMinecraftClassLoader();
 
-    byte[] getClassBytes(@NotNull ClassLoader loader, @NotNull String name);
+    byte[] getClassBytes(@Nullable ClassLoader loader, @NotNull String name);
+
+    @NotNull
+    ILogger getLogger();
 }

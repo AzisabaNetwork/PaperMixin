@@ -2,11 +2,12 @@ package net.azisaba.papermixin;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
-public class PaperMixin extends JavaPlugin {
+public class PaperMixinPlugin extends JavaPlugin {
     @Override
-    public void onEnable() {
-        MixinLoader.load(this);
+    public void onLoad() {
+        MixinLoader.load(EnvironmentType.PLUGIN, getSLF4JLogger(), getDataPath());
         initEnv();
     }
 
@@ -14,14 +15,14 @@ public class PaperMixin extends JavaPlugin {
         try {
             // Prevent loading of classes until we are ready
             Class.forName("net.azisaba.papermixin.PaperMixinEnvironment")
-                    .getConstructor(PaperMixin.class)
-                    .newInstance(this);
+                    .getConstructor(EnvironmentType.class, Logger.class)
+                    .newInstance(EnvironmentType.PLUGIN, getSLF4JLogger());
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to initialize Mixin", e);
         }
     }
 
-    public static @NotNull PaperMixin getInstance() {
-        return JavaPlugin.getPlugin(PaperMixin.class);
+    public static @NotNull PaperMixinPlugin getInstance() {
+        return JavaPlugin.getPlugin(PaperMixinPlugin.class);
     }
 }

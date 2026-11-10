@@ -15,7 +15,7 @@ repositories {
     maven("https://repo.spongepowered.org/repository/maven-public/")
 }
 
-val asmVersion = "9.9.1"
+val asmVersion = "9.11.1"
 
 configurations.create("include") {
     isCanBeResolved = true
@@ -27,6 +27,8 @@ dependencies {
     compileOnly("org.spongepowered:mixin:0.8.7")
     compileOnly(project(":helper"))
     implementation("net.blueberrymc:native-util:2.2.0")
+    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:slf4j-simple:2.0.16")
     compileOnly("org.ow2.asm:asm:$asmVersion")
     compileOnly("org.ow2.asm:asm-util:$asmVersion")
     compileOnly("org.ow2.asm:asm-tree:$asmVersion")
@@ -36,6 +38,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     configurations.getByName("include").dependencies.add(project.dependencies.create("org.spongepowered:mixin:0.8.7"))
+    configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:guava:33.5.0-jre"))
+    configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.code.gson:gson:2.13.2"))
     configurations.getByName("include").dependencies.add(project.dependencies.create(project(":helper")))
 }
 
@@ -53,8 +57,27 @@ tasks {
     }
 
     shadowJar {
+        relocate("org.slf4j", "net.azisaba.papermixin.shaded.org.slf4j")
+
         into("lib") {
             from(project.configurations.getByName("include"))
         }
+
+        mergeServiceFiles()
+
+        manifest {
+            attributes(mapOf(
+                "Premain-Class" to "net.azisaba.papermixin.PaperMixinAgent",
+                "Can-Redefine-Classes" to "true",
+                "Can-Retransform-Classes" to "true",
+                "Implementation-Title" to "PaperMixin",
+                "Implementation-Version" to project.version.toString(),
+                "Implementation-Vendor" to "AzisabaNetwork"
+            ))
+        }
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }

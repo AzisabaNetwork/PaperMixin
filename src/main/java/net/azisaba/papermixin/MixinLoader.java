@@ -1,8 +1,8 @@
 package net.azisaba.papermixin;
 
 import net.blueberrymc.nativeutil.NativeUtil;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,25 +12,35 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class MixinLoader {
-    public static void load(@NotNull PaperMixin plugin) {
-        String asmVersion = "9.9.1";
-        addToClasspath(plugin, "lib/asm-" + asmVersion + ".jar");
-        addToClasspath(plugin, "lib/asm-analysis-" + asmVersion + ".jar");
-        addToClasspath(plugin, "lib/asm-commons-" + asmVersion + ".jar");
-        addToClasspath(plugin, "lib/asm-tree-" + asmVersion + ".jar");
-        addToClasspath(plugin, "lib/asm-util-" + asmVersion + ".jar");
-        addToClasspath(plugin, "lib/mixin-0.8.7.jar");
-        addToClasspath(plugin, "lib/helper-1.0.0.jar");
-        addToClasspath(plugin, "lib/native-util-2.2.0.jar");
+    public static String applicationClass = "org.bukkit.Bukkit";
+    public static Path dataDirectory;
+
+    public static void load(@NotNull EnvironmentType environmentType, @NotNull Logger logger, @NotNull Path dataDirectory) {
+        logger.info("Loading PaperMixin version {} (Type={})", MixinLoader.class.getPackage().getImplementationVersion(), environmentType);
+        MixinLoader.dataDirectory = dataDirectory;
+        String asmVersion = "9.11.1";
+        addToClasspath(logger, dataDirectory, "lib/asm-" + asmVersion + ".jar");
+        addToClasspath(logger, dataDirectory, "lib/asm-analysis-" + asmVersion + ".jar");
+        addToClasspath(logger, dataDirectory, "lib/asm-commons-" + asmVersion + ".jar");
+        addToClasspath(logger, dataDirectory, "lib/asm-tree-" + asmVersion + ".jar");
+        addToClasspath(logger, dataDirectory, "lib/asm-util-" + asmVersion + ".jar");
+        addToClasspath(logger, dataDirectory, "lib/mixin-0.8.7.jar");
+        addToClasspath(logger, dataDirectory, "lib/helper-1.0.0.jar");
+        addToClasspath(logger, dataDirectory, "lib/native-util-2.2.0.jar");
+        if (environmentType == EnvironmentType.AGENT) {
+            addToClasspath(logger, dataDirectory, "lib/guava-33.5.0-jre.jar");
+            addToClasspath(logger, dataDirectory, "lib/gson-2.13.2.jar");
+        }
         File[] files = new File("modules").listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".jar")) {
                     try {
-                        addToClasspath(plugin, file.toURI().toURL());
+                        addToClasspath(logger, file.toURI().toURL());
                     } catch (MalformedURLException e) {
                         throw new RuntimeException(e);
                     }
@@ -39,30 +49,57 @@ public class MixinLoader {
         }
     }
 
-    private static void addToClasspath(@NotNull PaperMixin plugin, @NotNull String path) {
-        try (InputStream stream = plugin.getClass().getClassLoader().getResourceAsStream(path)) {
+    private static void addToClasspath(@NotNull Logger logger, @NotNull Path dataDirectory, @NotNull String path) {
+        try (InputStream stream = MixinLoader.class.getClassLoader().getResourceAsStream(path)) {
             if (stream == null) throw new RuntimeException("Failed to find " + path + " in jar");
-            Files.createDirectories(plugin.getDataFolder().toPath().resolve("lib"));
-            Files.copy(stream, plugin.getDataFolder().toPath().resolve(path), StandardCopyOption.REPLACE_EXISTING);
-            URL location = plugin.getDataFolder().toPath().resolve(path).toUri().toURL();
-            addToClasspath(plugin, location);
+            Files.createDirectories(dataDirectory.resolve("lib"));
+            Files.copy(stream, dataDirectory.resolve(path), StandardCopyOption.REPLACE_EXISTING);
+            URL location = dataDirectory.resolve(path).toUri().toURL();
+            addToClasspath(logger, location);
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract " + path + " from jar", e);
         }
     }
 
-    private static void addToClasspath(@NotNull PaperMixin plugin, @NotNull URL location) {
+    public static void addToClasspath(@NotNull Logger logger, @NotNull ClassLoader loader, @NotNull Path dataDirectory, @NotNull String path) {
+        try (InputStream stream = MixinLoader.class.getClassLoader().getResourceAsStream(path)) {
+            if (stream == null) throw new RuntimeException("Failed to find " + path + " in jar");
+            Files.createDirectories(dataDirectory.resolve("lib"));
+            if (!Files.exists(dataDirectory.resolve(path))) {
+                Files.copy(stream, dataDirectory.resolve(path), StandardCopyOption.REPLACE_EXISTING);
+            }
+            URL location = dataDirectory.resolve(path).toUri().toURL();
+            addToClasspath(logger, loader, location);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to extract " + path + " from jar", e);
+        }
+    }
+
+    private static void addToClasspath(@NotNull Logger logger, @NotNull URL location) {
+        addToClasspath(logger, getClassLoader(), location);
+    }
+
+    public static void addToClasspath(@NotNull Logger logger, @NotNull ClassLoader loader, @NotNull URL location) {
         try {
-            plugin.getSLF4JLogger().info("Adding {} to classpath", location);
-            ClassLoader loader = Bukkit.class.getClassLoader();
+            logger.info("Adding {} to classpath", location);
             if (loader instanceof URLClassLoader ucl) {
                 Method method = NativeUtil.getMethod(URLClassLoader.class, "addURL", "(Ljava/net/URL;)V");
                 NativeUtil.invokeVoid(method, ucl, location);
+            } else if (loader == ClassLoader.getSystemClassLoader()) {
+                NativeUtil.appendToSystemClassLoaderSearch(location.toString().substring(5));
             } else {
-                plugin.getSLF4JLogger().warn("Failed to add {} to classpath: loader is not URLClassLoader (actual type: {})", location, loader.getClass().getName());
+                logger.warn("Failed to add {} to classpath: loader is not URLClassLoader (actual type: {})", location, loader.getClass().getName());
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to add " + location + " to classpath", e);
+        }
+    }
+
+    private static ClassLoader getClassLoader() {
+        try {
+            return Class.forName("org.bukkit.Bukkit").getClassLoader();
+        } catch (ClassNotFoundException e) {
+            return ClassLoader.getSystemClassLoader();
         }
     }
 }

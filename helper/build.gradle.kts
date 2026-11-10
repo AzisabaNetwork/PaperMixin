@@ -11,7 +11,7 @@ repositories {
     maven("https://repo.spongepowered.org/repository/maven-public/")
 }
 
-val asmVersion = "9.9.1"
+val asmVersion = "9.11.1"
 
 dependencies {
     implementation("net.blueberrymc:native-util:2.2.0")

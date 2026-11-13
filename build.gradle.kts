@@ -40,6 +40,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     configurations.getByName("include").dependencies.add(project.dependencies.create("org.spongepowered:mixin:0.8.7"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:guava:33.5.0-jre"))
+    configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:failureaccess:1.0.3"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.code.gson:gson:2.13.2"))
     configurations.getByName("include").dependencies.add(project.dependencies.create(project(":helper")))
     configurations.getByName("include").dependencies.add(project.dependencies.create(project(":builtin")))

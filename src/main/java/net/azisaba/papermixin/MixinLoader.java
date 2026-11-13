@@ -45,6 +45,7 @@ public class MixinLoader {
         if (environmentType == EnvironmentType.AGENT) {
             addToClasspath(logger, null, dataDirectory, "lib/guava-33.5.0-jre.jar");
             addToClasspath(logger, null, dataDirectory, "lib/gson-2.13.2.jar");
+            addToClasspath(logger, null, dataDirectory, "lib/failureaccess-1.0.3.jar");
         }
         forEachModulesDirectory(path -> {
             try {

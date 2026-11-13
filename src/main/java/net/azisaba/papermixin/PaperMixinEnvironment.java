@@ -59,6 +59,7 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
             Class.forName("org.spongepowered.asm.mixin.injection.callback.CallbackInfo");
             Class.forName("org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable");
             Class.forName("org.spongepowered.asm.mixin.transformer.Config");
+            Class.forName("com.google.common.util.concurrent.internal.InternalFutureFailureAccess");
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }

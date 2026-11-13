@@ -14,6 +14,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Consumer;
 
 public class MixinLoader {
     public static String applicationClass = "org.bukkit.Bukkit";
@@ -35,15 +36,21 @@ public class MixinLoader {
             addToClasspath(logger, dataDirectory, "lib/guava-33.5.0-jre.jar");
             addToClasspath(logger, dataDirectory, "lib/gson-2.13.2.jar");
         }
+        forEachModulesDirectory(path -> {
+            try {
+                addToClasspath(logger, path.toUri().toURL());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static void forEachModulesDirectory(@NotNull Consumer<Path> consumer) {
         File[] files = new File("modules").listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".jar")) {
-                    try {
-                        addToClasspath(logger, file.toURI().toURL());
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
+                    consumer.accept(file.toPath());
                 }
             }
         }

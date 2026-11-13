@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -79,6 +80,13 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
         hasInitMinecraft = true;
         gotoPhase(MixinEnvironment.Phase.DEFAULT);
         MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/mixin-0.8.7.jar");
+        MixinLoader.forEachModulesDirectory(path -> {
+            try {
+                MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, path.toUri().toURL());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")

@@ -1,17 +1,19 @@
 package net.azisaba.papermixin.service;
 
-import net.azisaba.papermixin.helper.EnvProvider;
+import net.azisaba.papermixin.bridge.EnvProvider;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.service.IClassBytecodeProvider;
 import org.spongepowered.asm.transformers.MixinClassReader;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class PaperClassBytecodeProvider implements IClassBytecodeProvider {
     private ClassNode getClassNode(String className, byte[] classBytes, int flags) {
-        Objects.requireNonNull(classBytes, "classBytes");
+        if (classBytes == null) {
+            Thread.dumpStack();
+            throw new NullPointerException("classBytes");
+        }
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new MixinClassReader(classBytes, className);
         classReader.accept(classNode, flags);

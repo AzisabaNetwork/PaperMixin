@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "net.azisaba.papermixin.builtin.mixin",
+  "minVersion": "0.8.7",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinPluginsCommand"
+  ]
+}

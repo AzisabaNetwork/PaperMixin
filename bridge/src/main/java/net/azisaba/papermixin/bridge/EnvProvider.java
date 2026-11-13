@@ -1,4 +1,4 @@
-package net.azisaba.papermixin.helper;
+package net.azisaba.papermixin.bridge;
 
 public class EnvProvider {
     private static IPaperMixinEnvironment env;

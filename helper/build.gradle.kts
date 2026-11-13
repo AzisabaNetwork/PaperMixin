@@ -14,6 +14,7 @@ repositories {
 val asmVersion = "9.11.1"
 
 dependencies {
+    compileOnly(project(":bridge"))
     implementation("net.blueberrymc:native-util:2.2.0")
     implementation("org.ow2.asm:asm:${asmVersion}")
     implementation("org.ow2.asm:asm-util:${asmVersion}")

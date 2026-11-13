@@ -1,6 +1,6 @@
 package net.azisaba.papermixin.service;
 
-import net.azisaba.papermixin.helper.EnvProvider;
+import net.azisaba.papermixin.bridge.EnvProvider;
 import org.spongepowered.asm.service.IClassTracker;
 
 public class PaperClassTracker implements IClassTracker {

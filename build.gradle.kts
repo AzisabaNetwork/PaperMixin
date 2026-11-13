@@ -25,6 +25,7 @@ configurations.create("include") {
 dependencies {
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.spongepowered:mixin:0.8.7")
+    compileOnly(project(":bridge"))
     compileOnly(project(":helper"))
     implementation("net.blueberrymc:native-util:2.2.0")
     implementation("org.slf4j:slf4j-api:2.0.16")
@@ -41,6 +42,8 @@ dependencies {
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:guava:33.5.0-jre"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.code.gson:gson:2.13.2"))
     configurations.getByName("include").dependencies.add(project.dependencies.create(project(":helper")))
+    configurations.getByName("include").dependencies.add(project.dependencies.create(project(":builtin")))
+    configurations.getByName("include").dependencies.add(project.dependencies.create(project(":bridge")))
 }
 
 tasks {
@@ -72,7 +75,9 @@ tasks {
                 "Can-Retransform-Classes" to "true",
                 "Implementation-Title" to "PaperMixin",
                 "Implementation-Version" to project.version.toString(),
-                "Implementation-Vendor" to "AzisabaNetwork"
+                "Implementation-Vendor" to "AzisabaNetwork",
+                "Boot-Class-Path" to "lib/helper-1.0.0.jar",
+//                "MixinConfigs" to "papermixin.mixins.json", // handled in PaperMixinEnvironment
             ))
         }
     }

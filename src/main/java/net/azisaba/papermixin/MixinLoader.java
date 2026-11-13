@@ -2,6 +2,7 @@ package net.azisaba.papermixin;
 
 import net.blueberrymc.nativeutil.NativeUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -14,16 +15,24 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class MixinLoader {
+    private static EnvironmentType environmentType;
     public static String applicationClass = "org.bukkit.Bukkit";
     public static Path dataDirectory;
 
     public static void load(@NotNull EnvironmentType environmentType, @NotNull Logger logger, @NotNull Path dataDirectory) {
+        if (MixinLoader.environmentType != null) {
+            throw new IllegalStateException("MixinLoader is already initialized");
+        }
         logger.info("Loading PaperMixin version {} (Type={})", MixinLoader.class.getPackage().getImplementationVersion(), environmentType);
+        MixinLoader.environmentType = environmentType;
         MixinLoader.dataDirectory = dataDirectory;
         String asmVersion = "9.11.1";
+        addToClasspath(logger, null, dataDirectory, "lib/bridge-1.0.0.jar");
         addToClasspath(logger, dataDirectory, "lib/asm-" + asmVersion + ".jar");
         addToClasspath(logger, dataDirectory, "lib/asm-analysis-" + asmVersion + ".jar");
         addToClasspath(logger, dataDirectory, "lib/asm-commons-" + asmVersion + ".jar");
@@ -31,10 +40,11 @@ public class MixinLoader {
         addToClasspath(logger, dataDirectory, "lib/asm-util-" + asmVersion + ".jar");
         addToClasspath(logger, dataDirectory, "lib/mixin-0.8.7.jar");
         addToClasspath(logger, dataDirectory, "lib/helper-1.0.0.jar");
+        addToClasspath(logger, dataDirectory, "lib/builtin-1.0.0.jar");
         addToClasspath(logger, dataDirectory, "lib/native-util-2.2.0.jar");
         if (environmentType == EnvironmentType.AGENT) {
-            addToClasspath(logger, dataDirectory, "lib/guava-33.5.0-jre.jar");
-            addToClasspath(logger, dataDirectory, "lib/gson-2.13.2.jar");
+            addToClasspath(logger, null, dataDirectory, "lib/guava-33.5.0-jre.jar");
+            addToClasspath(logger, null, dataDirectory, "lib/gson-2.13.2.jar");
         }
         forEachModulesDirectory(path -> {
             try {
@@ -43,6 +53,14 @@ public class MixinLoader {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    public static @NotNull EnvironmentType getEnvironmentType() {
+        return Objects.requireNonNull(environmentType, "MixinLoader is not initialized");
+    }
+
+    public static @NotNull Optional<EnvironmentType> getEnvironmentTypeOptional() {
+        return Optional.ofNullable(environmentType);
     }
 
     public static void forEachModulesDirectory(@NotNull Consumer<Path> consumer) {
@@ -68,12 +86,14 @@ public class MixinLoader {
         }
     }
 
-    public static void addToClasspath(@NotNull Logger logger, @NotNull ClassLoader loader, @NotNull Path dataDirectory, @NotNull String path) {
+    public static void addToClasspath(@NotNull Logger logger, @Nullable ClassLoader loader, @NotNull Path dataDirectory, @NotNull String path) {
         try (InputStream stream = MixinLoader.class.getClassLoader().getResourceAsStream(path)) {
             if (stream == null) throw new RuntimeException("Failed to find " + path + " in jar");
             Files.createDirectories(dataDirectory.resolve("lib"));
-            if (!Files.exists(dataDirectory.resolve(path))) {
+            try {
                 Files.copy(stream, dataDirectory.resolve(path), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                logger.warn("Failed to extract {} from jar: {}", path, e.getMessage());
             }
             URL location = dataDirectory.resolve(path).toUri().toURL();
             addToClasspath(logger, loader, location);
@@ -86,7 +106,7 @@ public class MixinLoader {
         addToClasspath(logger, getClassLoader(), location);
     }
 
-    public static void addToClasspath(@NotNull Logger logger, @NotNull ClassLoader loader, @NotNull URL location) {
+    public static void addToClasspath(@NotNull Logger logger, @Nullable ClassLoader loader, @NotNull URL location) {
         try {
             logger.info("Adding {} to classpath", location);
             if (loader instanceof URLClassLoader ucl) {
@@ -94,6 +114,8 @@ public class MixinLoader {
                 NativeUtil.invokeVoid(method, ucl, location);
             } else if (loader == ClassLoader.getSystemClassLoader()) {
                 NativeUtil.appendToSystemClassLoaderSearch(location.toString().substring(5));
+            } else if (loader == null) {
+                NativeUtil.appendToBootstrapClassLoaderSearch(location.toString().substring(5));
             } else {
                 logger.warn("Failed to add {} to classpath: loader is not URLClassLoader (actual type: {})", location, loader.getClass().getName());
             }

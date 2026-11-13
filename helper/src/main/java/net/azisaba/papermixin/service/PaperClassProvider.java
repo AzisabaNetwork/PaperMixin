@@ -1,6 +1,6 @@
 package net.azisaba.papermixin.service;
 
-import net.azisaba.papermixin.helper.EnvProvider;
+import net.azisaba.papermixin.bridge.EnvProvider;
 import net.blueberrymc.nativeutil.NativeUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

@@ -1,6 +1,6 @@
 package net.azisaba.papermixin.service;
 
-import net.azisaba.papermixin.helper.EnvProvider;
+import net.azisaba.papermixin.bridge.EnvProvider;
 import org.spongepowered.asm.launch.platform.MainAttributes;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleURI;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleVirtual;

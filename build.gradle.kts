@@ -47,6 +47,29 @@ dependencies {
     configurations.getByName("include").dependencies.add(project.dependencies.create(project(":bridge")))
 }
 
+// due to bug in the Java 25
+val paperMixinJar by tasks.registering(Jar::class) {
+    archiveFileName.set("mixin-0.8.7.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("filtered-mixin"))
+
+    from({
+        zipTree(configurations.getByName("include").files.single {
+            it.name == "mixin-0.8.7.jar"
+        })
+    })
+
+    exclude(
+        "META-INF/services/org.spongepowered.asm.service.IMixinService",
+        "META-INF/services/org.spongepowered.asm.service.IMixinServiceBootstrap",
+        "META-INF/services/org.spongepowered.asm.service.IGlobalPropertyService",
+        "META-INF/*.SF",
+        "META-INF/*.RSA",
+        "META-INF/*.DSA",
+        "META-INF/*.EC",
+        "META-INF/SIG-*",
+    )
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -63,8 +86,15 @@ tasks {
     shadowJar {
         relocate("org.slf4j", "net.azisaba.papermixin.shaded.org.slf4j")
 
+//        into("lib") {
+//            from(project.configurations.getByName("include"))
+//        }
+
         into("lib") {
-            from(project.configurations.getByName("include"))
+            from(project.configurations.getByName("include")) {
+                exclude("mixin-0.8.7.jar")
+            }
+            from(paperMixinJar.flatMap { it.archiveFile })
         }
 
         mergeServiceFiles()

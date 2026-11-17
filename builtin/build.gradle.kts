@@ -17,5 +17,6 @@ dependencies {
     compileOnly(project(":helper"))
     compileOnly("net.blueberrymc:native-util:2.2.0")
     compileOnly("org.spongepowered:mixin:0.8.7")
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5")!!)
     compileOnly("org.jetbrains:annotations:26.1.0")
 }

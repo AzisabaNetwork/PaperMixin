@@ -13,6 +13,7 @@ repositories {
 dependencies {
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.spongepowered:mixin:0.8.7")
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5")!!)
 }
 
 tasks {

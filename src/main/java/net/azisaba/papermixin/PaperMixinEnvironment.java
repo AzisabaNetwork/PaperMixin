@@ -1,6 +1,7 @@
 package net.azisaba.papermixin;
 
 import com.google.common.io.ByteStreams;
+import com.llamalad7.mixinextras.MixinExtrasBootstrap;
 import net.azisaba.papermixin.bridge.EnvProvider;
 import net.azisaba.papermixin.bridge.IPaperMixinEnvironment;
 import net.azisaba.papermixin.bridge.MixinConfigData;
@@ -35,7 +36,8 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaperMixinEnvironment.class);
     private static final ILogger LOGGER_ADAPTER = new LoggerAdapterSlf4j("PaperMixin");
     private static boolean initializedMixin = false;
-    private static boolean hasInitMinecraft = false;
+    private static boolean initializedMinecraft = false;
+    private static boolean initializedMixinExtras = false;
     private IMixinTransformer transformer;
     private ClassLoader minecraftClassLoader;
     public final Set<Config> configs = new HashSet<>();
@@ -52,6 +54,7 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
     public void initMixin(@NotNull EnvironmentType environmentType, @NotNull Logger logger) {
         if (initializedMixin) throw new RuntimeException("Mixin is already initialized");
         MixinBootstrap.init();
+        MixinExtrasBootstrap.init();
         try {
             // preload classes to prevent errors at runtime
             Class.forName("org.spongepowered.asm.mixin.transformer.MixinInfo");
@@ -76,24 +79,27 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
     public void addHook() {
         NativeUtil.registerClassLoadHook((loader, className, classBeingRedefined, protectionDomain, buf) -> {
             classes.add(className);
-            if (!hasInitMinecraft && isMinecraftClass(className.replace("/", "."))) {
+            if (!initializedMinecraft && isMinecraftClass(className.replace('/', '.'))) {
                 minecraftClassLoader = loader;
                 initMinecraft();
             }
             if (buf == null) return null;
-            return processClass(className, buf);
+            byte[] processed = processClass(className, buf);
+            handleMixinExtras();
+            return processed;
         });
     }
 
     public void initMinecraft() {
-        hasInitMinecraft = true;
-        gotoPhase(MixinEnvironment.Phase.DEFAULT);
+        initializedMinecraft = true;
         if (MixinLoader.getEnvironmentType() == EnvironmentType.AGENT) {
             MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/mixin-0.8.7.jar");
+            MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/mixinextras-common-0.5.5.jar");
 //            MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/helper-1.0.0.jar");
-//            MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/native-util-2.2.0.jar");
+            MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.dataDirectory, "lib/native-util-2.2.0.jar");
 //            MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, MixinLoader.getSelfJarUrl());
         }
+        gotoPhase(MixinEnvironment.Phase.DEFAULT);
         MixinLoader.forEachModulesDirectory(path -> {
             try {
                 MixinLoader.addToClasspath(LOGGER, minecraftClassLoader, path.toUri().toURL());
@@ -101,6 +107,25 @@ public class PaperMixinEnvironment implements IPaperMixinEnvironment {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleMixinExtras() {
+        if (minecraftClassLoader == null || initializedMixinExtras) {
+            return;
+        }
+        try {
+            Class<?> classGenUtils = Class.forName("com.llamalad7.mixinextras.utils.ClassGenUtils", true, ClassLoader.getSystemClassLoader());
+            Map<String, byte[]> definitions = (Map<String, byte[]>) classGenUtils.getMethod("getDefinitions").invoke(null);
+            if (!definitions.isEmpty()) {
+                LOGGER.info("MixinExtras definitions: {}", definitions);
+                definitions.forEach((k, v) -> NativeUtil.defineClass(k.replace('.', '/'), minecraftClassLoader, v, v.length));
+                initializedMixinExtras = true;
+            }
+        } catch (Throwable e) {
+            LOGGER.error("A critical error occurred while initializing MixinExtras classes: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @SuppressWarnings("unchecked")

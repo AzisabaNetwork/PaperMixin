@@ -58,7 +58,11 @@ public class MixinPluginsCommand {
         return env.getLoadedConfigs().stream().map(config -> {
             TextColor color = config.isVisited() ? NamedTextColor.GREEN : NamedTextColor.RED;
             return Component.text(config.name(), color)
-                    .hoverEvent(Component.text("Source: " + config.source()).append(asPlainComponents("Mixin targets:\n- " + String.join("\n- ", config.targets()))));
+                    .clickEvent(ClickEvent.callback(audience -> {
+                        audience.sendMessage(Component.text("Source: " + config.source()));
+                        audience.sendMessage(Component.text("Mixin targets:"));
+                        config.targets().forEach(target -> audience.sendMessage(Component.text("- " + target)));
+                    }));
         }).toList();
     }
 }

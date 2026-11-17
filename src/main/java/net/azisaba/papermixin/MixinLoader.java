@@ -39,6 +39,7 @@ public class MixinLoader {
         addToClasspath(logger, dataDirectory, "lib/asm-tree-" + asmVersion + ".jar");
         addToClasspath(logger, dataDirectory, "lib/asm-util-" + asmVersion + ".jar");
         addToClasspath(logger, dataDirectory, "lib/mixin-0.8.7.jar");
+        addToClasspath(logger, dataDirectory, "lib/mixinextras-common-0.5.5.jar");
         addToClasspath(logger, dataDirectory, "lib/helper-1.0.0.jar");
         addToClasspath(logger, dataDirectory, "lib/builtin-1.0.0.jar");
         addToClasspath(logger, dataDirectory, "lib/native-util-2.2.0.jar");

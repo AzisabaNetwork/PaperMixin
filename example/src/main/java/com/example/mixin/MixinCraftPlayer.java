@@ -1,10 +1,8 @@
 package com.example.mixin;
 
-import io.papermc.paper.adventure.AdventureComponent;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.minecraft.network.chat.Component;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.spongepowered.asm.mixin.Mixin;

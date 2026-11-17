@@ -25,6 +25,7 @@ configurations.create("include") {
 dependencies {
     paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.spongepowered:mixin:0.8.7")
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5")!!)
     compileOnly(project(":bridge"))
     compileOnly(project(":helper"))
     implementation("net.blueberrymc:native-util:2.2.0")
@@ -39,6 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     configurations.getByName("include").dependencies.add(project.dependencies.create("org.spongepowered:mixin:0.8.7"))
+    configurations.getByName("include").dependencies.add(project.dependencies.create("io.github.llamalad7:mixinextras-common:0.5.5"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:guava:33.5.0-jre"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.guava:failureaccess:1.0.3"))
     configurations.getByName("include").dependencies.add(project.dependencies.create("com.google.code.gson:gson:2.13.2"))
